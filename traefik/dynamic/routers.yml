@@ -1,0 +1,12 @@
+http:
+  routers:
+    gateway:
+      entryPoints:
+        - websecure
+      service: gateway-service
+      rule: "Host(`{{ env \"API_HOST\" }}`)"
+      tls:
+        certResolver: le
+      middlewares:
+        - security
+        - cors

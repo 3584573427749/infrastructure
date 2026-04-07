@@ -1,0 +1,22 @@
+http:
+  middlewares:
+
+    cors:
+      headers:
+        accessControlAllowOriginList:
+          - "*"
+        accessControlAllowMethods:
+          - GET
+          - POST
+          - PUT
+          - DELETE
+          - OPTIONS
+        accessControlMaxAge: 100
+        addVaryHeader: true
+
+    security:
+      headers:
+        stsSeconds: 63072000
+        stsIncludeSubdomains: true
+        forceSTSHeader: true
+        customFrameOptionsValue: "SAMEORIGIN"

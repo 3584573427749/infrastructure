@@ -1,0 +1,6 @@
+http:
+  services:
+    gateway-service:
+      loadBalancer:
+        servers:
+          - url: "http://gateway:8080"

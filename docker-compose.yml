@@ -1,0 +1,94 @@
+version: "3.9"
+
+services:
+
+  traefik:
+    image: traefik:v3.0
+    command:
+      - "--api.dashboard=true"
+      - "--providers.file.directory=/etc/traefik/dynamic"
+      - "--providers.file.watch=true"
+      - "--entryPoints.web.address=:80"
+      - "--entryPoints.websecure.address=:443"
+      - "--certificatesResolvers.le.acme.httpChallenge=true"
+      - "--certificatesResolvers.le.acme.httpChallenge.entryPoint=web"
+      - "--certificatesResolvers.le.acme.storage=/acme.json"
+    ports:
+      - "80:80"
+      - "443:443"
+      - "8080:8080"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ./traefik/traefik.yml:/etc/traefik/traefik.yml
+      - ./traefik/dynamic:/etc/traefik/dynamic
+      - ./traefik/acme.json:/acme.json
+    networks:
+      - internal
+
+  gateway:
+    image: ghcr.io/simning.ax/gateway-service:latest
+    depends_on:
+      - auth
+      - time
+      - group
+    environment:
+      SERVICE_KEY: ${SERVICE_KEY}
+      AUTH_INTERNAL_URL: http://auth:8080
+      TIME_INTERNAL_URL: http://time:8080
+      GROUP_INTERNAL_URL: http://group:8080
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.gateway.rule=Host(`${API_HOST}`)"
+      - "traefik.http.routers.gateway.entrypoints=websecure"
+      - "traefik.http.routers.gateway.tls.certresolver=le"
+    networks:
+      - internal
+
+  auth:
+    image: ghcr.io/simning.ax/auth-service:latest
+    environment:
+      DB_HOST: mariadb
+      DB_NAME: auth_db
+      DB_USER: ${DB_USER}
+      DB_PASS: ${DB_PASS}
+    networks:
+      - internal
+
+  time:
+    image: ghcr.io/simning.ax/time-service:latest
+    environment:
+      DB_HOST: mariadb
+      DB_NAME: time_db
+      DB_USER: ${DB_USER}
+      DB_PASS: ${DB_PASS}
+    networks:
+      - internal
+
+  group:
+    image: ghcr.io/simning.ax/group-service:latest
+    environment:
+      DB_HOST: mariadb
+      DB_NAME: group_db
+      DB_USER: ${DB_USER}
+      DB_PASS: ${DB_PASS}
+    networks:
+      - internal
+
+  mariadb:
+    image: mariadb:10.11
+    command: --transaction-isolation=READ-COMMITTED --log-bin=mysql-bin --binlog-format=ROW
+    environment:
+      MYSQL_ROOT_PASSWORD: ${DB_ROOT}
+      MYSQL_USER: ${DB_USER}
+      MYSQL_PASSWORD: ${DB_PASS}
+    volumes:
+      - mariadb_data:/var/lib/mysql
+    networks:
+      - internal
+
+networks:
+  internal:
+    driver: bridge
+
+volumes:
+  mariadb_data:
