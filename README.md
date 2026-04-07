@@ -15,15 +15,15 @@ Detta repository innehåller infrastruktur för hela mikrotjänstplattformen.
 ### 1. Kopiera .env
 ```bash
 cp .env.example .env
-´´´
+```
 
 ### 2. Starta systemet
-```bash
+``` bash
 docker compose up -d
 ```
 
 ### 3.Kör migreringar
-```bash
+``` bash
 ./scripts/migrate.sh
 ```
 
