@@ -1,0 +1,48 @@
+services:
+  auth:
+    container_name: auth
+    build:
+      context: ../auth-service
+    env_file:
+      - ../auth-service/.env
+    volumes:
+      - ../auth-service:/var/www
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    ports:
+      - "18080:8080"
+    networks:
+      - internal
+
+  group:
+    container_name: group
+    build:
+      context: ../group-service
+    env_file:
+      - ../group-service/.env
+    volumes:
+      - ../group-service:/var/www
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    ports:
+      - "18081:8080"
+    networks:
+      - internal
+
+  admin:
+    container_name: admin
+    build:
+      context: ../admin-ui
+    volumes:
+      - ../admin-ui:/app
+      - /app/node_modules
+    working_dir: /app
+    command: npm run dev -- --host 0.0.0.0
+    ports:
+      - "15173:5173"
+    networks:
+      - internal
+
+networks:
+  internal:
+    driver: bridge
