@@ -1,6 +1,22 @@
 services:
-  auth:
-    container_name: auth
+  gateway-service:
+    container_name: gateway-service
+    build:
+      context: ../gateway-service
+    env_file:
+      - ../gateway-service/.env
+    volumes:
+      - ../gateway-service:/var/www
+    ports:
+      - "18000:8080"
+    depends_on:
+      - auth-service
+      - group-service
+    networks:
+      - internal
+
+  auth-service:
+    container_name: auth-service
     build:
       context: ../auth-service
     env_file:
@@ -14,8 +30,8 @@ services:
     networks:
       - internal
 
-  group:
-    container_name: group
+  group-service:
+    container_name: group-service
     build:
       context: ../group-service
     env_file:
@@ -29,15 +45,14 @@ services:
     networks:
       - internal
 
-  admin:
-    container_name: admin
+  admin-ui:
+    container_name: admin-ui
     build:
       context: ../admin-ui
+      dockerfile: Dockerfile.dev
     volumes:
       - ../admin-ui:/app
       - /app/node_modules
-    working_dir: /app
-    command: npm run dev -- --host 0.0.0.0
     ports:
       - "15173:5173"
     networks:
